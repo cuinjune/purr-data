@@ -17,7 +17,7 @@ You can try the current version from https://cuinjune-purr-data.glitch.me/
 - This repository is a product of GSoC 2020: https://git.purrdata.net/cuinjune/purr-data
 - Commit History: https://git.purrdata.net/cuinjune/purr-data/-/commits/emscripten23-test?author=Zack%20Lee
 - All my commits have been merged into the organization repository: https://git.purrdata.net/jwilkes/purr-data/-/tree/emscripten
-- Most of the files under this directory are my creation https://git.purrdata.net/jwilkes/purr-data/-/tree/emscripten/emscripten
+- Most of my works are under this directory: https://git.purrdata.net/jwilkes/purr-data/-/tree/emscripten/emscripten
 - This repository only cantains files used to run Purr Data in a web browser: https://github.com/cuinjune/purr-data
 
 ## Accomplished milestones
