@@ -1,32 +1,28 @@
-## Directory structure
+# Purr Data
 
-- __Components__ : elements that are dynamically added to the page(menu, canvas, dialogs)
-  - __Components/dialogs__ : copied dialogs files from pd/nw 
-- __CSS__ : copied from pd/nw/css folder
-  - __CSS/webapp__ : styles created for this project
-- __Dist__ : browserified PurrData JS files
-- __Libs__ : external dependencies
-- __Utils__ : common functions for this project 
+## Overview
+This document describes the work that was done under [Google Summer of Code 2020](https://summerofcode.withgoogle.com/) for organization Purr Data. The project idea was to make the native Purr Data run in a web browser by adding a WebAssembly target and HTML5 GUI framework.
 
-## Setup
-In this project you will need Node.JS. You can follow [this guide](https://github.com/itp-dwd/2020-spring/blob/master/guides/installing-nodejs.md) to install it.
-1. Clone this repository
-2. Build
-   ```
-    $ make emscripten
-   ```
-3. The project directory to host the web app is `purr-data/emscripten/project/purr-data`
-4. You can run `npm start` under the project directory to run the app
+**Purr Data** a.k.a. **Pd-l2ork 2** is an improved version of Miller Puckette’s Pd.
 
-## Known bugs list
-- The view options still not implemented.
+[Pd](https://puredata.info/) (Pure Data) is a graphical data-flow programming environment which is geared towards real-time interactive computer music and multimedia applications. It is a full-featured open-source alternative to its commercial sibling, Cycling74’s Max.
 
-- Update help browser to work on webapp
+[Purr Data](https://agraef.github.io/purr-data/) serves the same purpose, but offers a new and much improved graphical user interface and includes many 3rd party plug-ins. Like Pd, it runs on Linux, macOS and Windows, and is open-source throughout.
 
-- If you try to close __Quick Reference__ the application stops responding (seems to be frozen)
+The project's goal was to make the Purr Data run in a web browser so it can be more accessible to users and make their work more easily shared with other people.
 
-- If you create an object (e.g. [spigot]) and open a help file, scroll to the right end of the help file, then close the help file, the mouse coordinate doesn't work correctly in the first patch
+You can try the current version from https://cuinjune-purr-data.glitch.me/
 
-- Split patch canvas in half just works if you don't grow your patch more than half of the canvas container
+## Source Code
+- This repository is a product of GSoC 2020: https://git.purrdata.net/cuinjune/purr-data
+- Commit History: https://git.purrdata.net/cuinjune/purr-data/-/commits/emscripten23-test?author=Zack%20Lee
+- All my commits have been merged into the organization repository: https://git.purrdata.net/jwilkes/purr-data/-/tree/emscripten
+- Most of the files under this directory are my creation https://git.purrdata.net/jwilkes/purr-data/-/tree/emscripten/emscripten
+- This repository only cantains files used to run Purr Data in a web browser: https://github.com/cuinjune/purr-data
 
-If you found any bugs, please let us know. You can contact using [mailing list](http://disis.music.vt.edu/listinfo/l2ork-dev) or create an issue;
+## Accomplished milestones
+- Modified native Purr Data and libpd codebase to make them compatible with [Emscripten](https://emscripten.org/).
+- Modified and created Makefile to build for Emscripten and to generate WebAssembly(`.wasm`) binaries for external libraries.
+- Cleaned the backend code and organized file system so the project can be easily maintained.
+- Integrated the backend with the frontend.
+- Fixed some major bugs and errors in the frontend.
