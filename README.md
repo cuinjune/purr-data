@@ -1,5 +1,14 @@
 # Purr Data
 
+## Table of Contents
+- [Overview](#overview)
+- [Developers](#developers)
+- [Source Code](#source-code)
+- [Accomplished Milestones](#accomplished-milestones)
+- [Directory Structure](#directory-structure)
+- [Setup](#setup)
+- [Future Work](#future-work)
+
 ## Overview
 This document describes the work that was done under [Google Summer of Code 2020](https://summerofcode.withgoogle.com/) a.k.a. GSoC for organization Purr Data. The project idea was to make the native Purr Data run in a web browser by adding a WebAssembly target and HTML5 GUI framework.
 
@@ -13,7 +22,7 @@ The goal of this project is to make the Purr Data run in a web browser so it can
 
 You can try the current version from https://cuinjune-purr-data.glitch.me/
 
-## Developers (GSoC)
+## Developers
 - The backend part of the software has been mainly done by Zack Lee (cuinjune@gmail.com)
 - The frontend part of the software has been mainly done by Hugo Carvalho (hugonvsc@gmail.com)
 
