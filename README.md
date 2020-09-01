@@ -4,8 +4,8 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Developers](#developers)
-- [Source Code](#source-code)
 - [Accomplished Milestones](#accomplished-milestones)
+- [Source Code](#source-code)
 - [Setup](#setup)
 - [Directory Structure](#directory-structure)
 - [Future Work](#future-work)
@@ -28,13 +28,6 @@ You can try the current version from https://cuinjune-purr-data.glitch.me/
 - The backend part of the software has been mainly done by Zack Lee (cuinjune@gmail.com)
 - The frontend part of the software has been mainly done by Hugo Carvalho (hugonvsc@gmail.com)
 
-## Source Code
-- This repository is a product of GSoC 2020: https://git.purrdata.net/cuinjune/purr-data
-- Commit History: https://git.purrdata.net/cuinjune/purr-data/-/commits/emscripten23-test?author=Zack%20Lee
-- All my commits have been merged into the organization repository: https://git.purrdata.net/jwilkes/purr-data/-/tree/emscripten
-- Most of my works are under this directory: https://git.purrdata.net/jwilkes/purr-data/-/tree/emscripten/emscripten
-- This repository only cantains files used to run Purr Data in a web browser: https://github.com/cuinjune/purr-data
-
 ## Accomplished Milestones
 - Modified native Purr Data and libpd codebase to make them compatible with [Emscripten](https://emscripten.org/). (Zack)
 - Modified and created Makefile to build for Emscripten and to generate WebAssembly(`.wasm`) binaries for external libraries. (Zack)
@@ -43,6 +36,13 @@ You can try the current version from https://cuinjune-purr-data.glitch.me/
 - Reimplemented some elements(menu, canvas, style) specifically for the web browser. (Hugo)
 - Integrated the backend with the frontend. (Hugo, Zack)
 - Fixed some major bugs and errors in the frontend. (Hugo, Zack)
+
+## Source Code
+- This repository is a product of GSoC 2020: https://git.purrdata.net/cuinjune/purr-data
+- Commit History: https://git.purrdata.net/cuinjune/purr-data/-/commits/emscripten23-test?author=Zack%20Lee
+- All my commits have been merged into the organization repository: https://git.purrdata.net/jwilkes/purr-data/-/tree/emscripten
+- Most of my works are under this directory: https://git.purrdata.net/jwilkes/purr-data/-/tree/emscripten/emscripten
+- This repository only cantains files used to run Purr Data in a web browser: https://github.com/cuinjune/purr-data
 
 ## Setup
 
