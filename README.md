@@ -5,9 +5,10 @@
 - [Developers](#developers)
 - [Source Code](#source-code)
 - [Accomplished Milestones](#accomplished-milestones)
-- [Directory Structure](#directory-structure)
 - [Setup](#setup)
+- [Directory Structure](#directory-structure)
 - [Future Work](#future-work)
+- [Reporting Bugs](#reporting-bugs)
 
 ## Overview
 This document describes the work that was done under [Google Summer of Code 2020](https://summerofcode.withgoogle.com/) a.k.a. GSoC for organization Purr Data. The project idea was to make the native Purr Data run in a web browser by adding a WebAssembly target and HTML5 GUI framework.
@@ -42,15 +43,6 @@ You can try the current version from https://cuinjune-purr-data.glitch.me/
 - Integrated the backend with the frontend. (Hugo, Zack)
 - Fixed some major bugs and errors in the frontend. (Hugo, Zack)
 
-## Directory Structure
-- components: Elements that are dynamically added to the page. (canvas, dialogs, menu)
-- components/dialogs: Copied dialogs files from `purr-data/pd/nw` folder.
-- css: Copied css files from `purr-data/pd/nw/css` folder.
-- css/webapp: Styles created for the web browser.
-- dist: Browserified Javascript files. (pdgui.js, pd_shortcuts.js, pd_canvas.js)
-- libs: external dependencies.
-- utils: common functions used for this project.
-
 ## Setup
 
 ### Installing Dependencies (Linux)
@@ -84,7 +76,16 @@ make emscripten
 
 ### Running Purr Data in a web browser
 - After the building is successfully completed, visit http://localhost:5000 to in your browser.
-- You can run `npm start` under `purr-data/emscripten/project/purr-data` to run the app again. 
+- You can run `npm start` under `purr-data/emscripten/project/purr-data` to run the app again.
+
+## Directory Structure
+- components: Elements that are dynamically added to the page. (canvas, dialogs, menu)
+- components/dialogs: Copied dialogs files from `purr-data/pd/nw` folder.
+- css: Copied css files from `purr-data/pd/nw/css` folder.
+- css/webapp: Styles created for the web browser.
+- dist: Browserified Javascript files. (pdgui.js, pd_shortcuts.js, pd_canvas.js)
+- libs: external dependencies.
+- utils: common functions used for this project.
 
 ## Future Work
 - Fix shortcuts so they can work identically in browsers as the native Purr Data.
@@ -104,4 +105,5 @@ make emscripten
 - Clean the frontend codebase and organize the file system.
 - Make the work storable and sharable between users.
 
-
+## Reporting bugs
+If you find any bugs, please let us know. You can contact using [mailing list](http://disis.music.vt.edu/listinfo/l2ork-dev) or create an [issue](https://git.purrdata.net/jwilkes/purr-data/-/issues).
