@@ -89,7 +89,7 @@ make emscripten
 
 ## Future Work
 - Fix shortcuts so they can work identically in browsers as the native Purr Data.
-- Fix getting stuck in the loading screen until a mouse/key event is triggered in a Firefox browser.
+- Fix getting stuck in the loading screen until a mouse/key event is triggered in Firefox/Safari.
 - Fix the patch not responding to mouse event after the help file is opened and not being clicked.
 - Fix wrong mouse coordinate issue that happens in some circumstances.
 - Fix or disable some of the global menu items not working.
