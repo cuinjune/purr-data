@@ -12,7 +12,7 @@
 - [Reporting Bugs](#reporting-bugs)
 
 ## Overview
-This document describes the work that was done under [Google Summer of Code 2020](https://summerofcode.withgoogle.com/) a.k.a. GSoC for organization Purr Data. The project idea was to make the native Purr Data run in a web browser by adding a WebAssembly target and HTML5 GUI framework.
+This document describes the work that was done under [Google Summer of Code 2020](https://summerofcode.withgoogle.com/) a.k.a. GSoC for organization Purr Data. The project idea is to make the native Purr Data run in a web browser by adding a WebAssembly target and HTML5 GUI framework.
 
 **Purr Data** a.k.a. **Pd-l2ork 2** is an improved version of Miller Puckette’s Pd.
 
