@@ -85,8 +85,8 @@ make emscripten
 - css: Copied css files from `purr-data/pd/nw/css` folder.
 - css/webapp: Styles created for the web browser.
 - dist: Browserified Javascript files. (pdgui.js, pd_shortcuts.js, pd_canvas.js)
-- libs: external dependencies.
-- utils: common functions used for this project.
+- libs: External dependencies.
+- utils: Common functions used for this project.
 
 ## Future Work
 - Fix shortcuts so they can work identically in browsers as the native Purr Data.
