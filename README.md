@@ -76,7 +76,7 @@ make emscripten
 ```
 
 ### Running Purr Data in a web browser
-- After the building is successfully completed, visit http://localhost:5000 to in your browser.
+- After the building is successfully completed, visit http://localhost:5000 in your browser.
 - You can run `npm start` under `purr-data/emscripten/project/purr-data` to run the app again.
 
 ## Directory Structure
