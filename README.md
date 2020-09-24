@@ -63,9 +63,9 @@ git pull
 ./emsdk install latest
 ./emsdk activate latest
 source ./emsdk_env.sh
-emsdk update-tags
-emsdk install tot
-emsdk activate tot
+./emsdk update-tags
+./emsdk install tot
+./emsdk activate tot
 cd ..
 ```
 
