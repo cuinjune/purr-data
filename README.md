@@ -29,7 +29,7 @@ You can try the current version from https://cuinjune-purr-data.glitch.me/
 - The frontend part of the software has been mainly done by Hugo Carvalho (hugonvsc@gmail.com)
 
 ## Accomplished Milestones
-- Modified native Purr Data and libpd codebase to make them compatible with [Emscripten](https://emscripten.org/). (Zack)
+- Modified the native Purr Data and libpd codebase to make them compatible with [Emscripten](https://emscripten.org/). (Zack)
 - Modified and created Makefile to build for Emscripten and to generate WebAssembly(`.wasm`) binaries for external libraries. (Zack)
 - Cleaned the backend codebase and organized the file system so the project can be easily maintained. (Zack)
 - Modified the existing NW.js based source code to make them compatible with web browsers. (Hugo)
