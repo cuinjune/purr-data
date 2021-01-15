@@ -20,7 +20,7 @@ This document describes the work that was done under [Google Summer of Code 2020
 
 [Purr Data](https://agraef.github.io/purr-data/) serves the same purpose, but offers a new and much improved graphical user interface and includes many 3rd party plug-ins. Like Pd, it runs on Linux, macOS and Windows, and is open-source throughout.
 
-The goal of this project is to make the Purr Data run in a web browser so it can be more accessible to users.
+The goal of this project is to make the graphical programming environment Purr Data run in a web browser so it can be more accessible to users.
 
 You can try the current version from https://cuinjune-purr-data.glitch.me/
 
