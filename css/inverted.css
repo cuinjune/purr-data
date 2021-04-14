@@ -1,11 +1,6 @@
 /* Global CSS */
 
-/*
-@font-face {
-    font-family: "DejaVu Sans Mono";
-    src: url("../DejaVuSansMono.ttf");
-}
-*/
+
 
 body {
     margin: 0px;
@@ -505,7 +500,7 @@ input[name="label"] {
 }
 
 input[name="font_size"] {
-    width: 3em;
+    width: 3.5m;
 }
 
 input[name="startup_flags"] {
