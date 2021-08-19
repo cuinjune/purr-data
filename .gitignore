@@ -5,11 +5,14 @@ node_modules
 .DS_Store
 
 # ignore binary files
-# main.data
-# main.html
-# main.js
-# main.wasm
+main.data
+main.html
+main.js
+main.wasm
 
 # ignore copied files
-# components/dialogs/dialogs_*.html
-# css/*.css
+components/dialogs/dialog_*.html
+css/*.css
+
+# ignore build files
+dist/

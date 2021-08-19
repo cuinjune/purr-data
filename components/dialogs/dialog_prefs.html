@@ -421,7 +421,7 @@
             <label data-i18n="[title]prefs.startup.paths_tt">
               <span data-i18n="prefs.startup.paths"></span>
             </label>
-            <div style="height:24vh; width:89vw; background:white; border: 1px solid #bbb; overflow-y:auto; overflow-x:auto; padding:0px;">
+            <div style="height:24vh; width:100%; background:white; border: 1px solid #bbb; overflow-y:auto; overflow-x:auto; padding:0px;">
               <table id="startup_paths" style="width:100%; background:white;">
               </table>
             </div>
@@ -439,7 +439,7 @@
             <label data-i18n="[title]prefs.startup.libs_tt">
               <span data-i18n="prefs.startup.libs"></span>
             </label>
-            <div style="height:24vh; width:89vw; background:white; border: 1px solid #bbb; overflow-y:auto; overflow-x:auto; padding:0px;">
+            <div style="height:24vh; width:100%; background:white; border: 1px solid #bbb; overflow-y:auto; overflow-x:auto; padding:0px;">
               <table id="startup_libs" style="width:100%; background:white;">
               </table>
             </div>
@@ -454,13 +454,13 @@
                 <span data-i18n="prefs.startup.del"></span>
               </button>
             </div>
-            <label data-i18n="[title]prefs.startup.flags_tt">
+            <label data-i18n="[title]prefs.startup.flags_tt" style="width:100%; text-align: left;">
               <span data-i18n="prefs.startup.flags"></span>
               <br/>
               <input type="text"
                      id="startup_flags"
                      name="startup_flags"
-                     style="width:89vw">
+                     style="width:100%">
             </label>
           </div>
         </div>
@@ -773,7 +773,7 @@ function cancel() {
     // if you can open the Prefs dialog after clicking "Ok".
     pdgui.remove_dialogwin(pd_object_callback);
     if(pdgui.is_webapp()){
-        remove_dialog(pd_object_callback)
+        $("#dialog-modal").modal("hide");
     }else{
         window.close(true);
     }
@@ -1327,6 +1327,12 @@ function add_events(name) {
         });
     }
     pdgui.dialog_bindings(name);
+    if (pdgui.is_webapp) {
+      $("#dialog-modal").on("hidden.bs.modal", function (e) {
+        remove_dialog(pd_object_callback)
+        $("#dialog-modal").off("hidden.bs.modal")
+      })
+    }
 }
 
   </script>

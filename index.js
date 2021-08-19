@@ -58,9 +58,18 @@ function create_window(cid, type, width, height, xpos, ypos, attr_array) {
                 // cleaning dialog div
                 dialog_div.innerHTML = "";
 
-                $("#sidebar-body-dialog").prepend(dialog_div.outerHTML)
+                $("#dialog-body").prepend(dialog_div.outerHTML)
                 $("#dialog-div").prepend(data)
-
+                var props_map = {
+                    "dialog_prefs.html": "Pd-L20rk",
+                    "dialog_canvas.html": "Canvas",
+                    "dialog_iemgui.html": "Iemgui",
+                    "dialog_gatom.html": "Atom",
+                    "dialog_font.html": "Font"
+                };
+                $("#dialog-title").text(props_map[f] + " Properties");
+                
+                $("#dialog-modal").modal("show");
                 // initialize the dialog window                
                 register_dialog(cid,attr_array);
             });

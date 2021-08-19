@@ -60,7 +60,7 @@ function console_find_callback() {
     var highlight_checkbox = document.getElementById("console_find_highlight");
     console_find_highlight_all(highlight_checkbox);
     console_find_traverse.set_index(0);
-    console_find_traverse.next();
+    console_find_traverse.set_first_match();
 }
 
 function console_find_keypress(e) {
@@ -99,6 +99,12 @@ var console_find_traverse = (function () {
         next: function () {
             var i, last, next,
                 elements = console_text.getElementsByTagName(wrap_tag);
+                count++;
+                if (count >= elements.length) {
+                    count = 0;
+                } else if (count < 0) {
+                    count = elements.length - 1;
+                }
             if (elements.length > 0) {
                 i = count % elements.length;
                 elements[i].classList.add("console_find_current");
@@ -110,13 +116,58 @@ var console_find_traverse = (function () {
                 }
                 // adjust the scrollbar to make sure the element is visible,
                 // but only if necessary.
-                // I don't think this is available on all browsers...
-                elements[i].scrollIntoViewIfNeeded();
-                count++;
+                var isFirefox = typeof InstallTrigger !== 'undefined'; // checks if browser is Firefox or not
+                if (isFirefox) {
+                    elements[i].scrollIntoView();
+                } else {
+                    elements[i].scrollIntoViewIfNeeded();
+                }
+            }
+        },
+        previous: function () {
+            var i, last, prev,
+                elements = console_text.getElementsByTagName(wrap_tag);
+                count--;
+                if (count >= elements.length) {
+                    count = 0;
+                } else if (count < 0) {
+                    count = elements.length - 1;
+                }
+            if (elements.length > 0) {
+                i = count % elements.length;
+                elements[i].classList.add("console_find_current");
+                if (elements.length > 1) {
+                    last = i === elements.length - 1 ? 0 : i + 1;
+                    prev = (i - 1 + elements.length) % elements.length;
+                    elements[last].classList.remove("console_find_current");
+                    elements[prev].classList.remove("console_find_current");
+                }
+                // adjust the scrollbar to make sure the element is visible,
+                // but only if necessary.
+                var isFirefox = typeof InstallTrigger !== 'undefined'; // checks if browser is Firefox or not
+                if (isFirefox) {
+                    elements[i].scrollIntoView();
+                } else {
+                    elements[i].scrollIntoViewIfNeeded();
+                }
             }
         },
         set_index: function(c) {
             count = c;
+        },
+        set_first_match: function() {
+            var elements = console_text.getElementsByTagName(wrap_tag);
+            if (elements.length > 0) {
+                elements[0].classList.add("console_find_current");
+            }
+            // adjust the scrollbar to make sure the element is visible,
+            // but only if necessary.
+            var isFirefox = typeof InstallTrigger !== 'undefined'; // checks ifbrowser is Firefox or not
+            if (isFirefox) {
+                elements[0].scrollIntoView();
+            } else {
+                elements[0].scrollIntoViewIfNeeded();
+            }
         }
     };
 }());
@@ -133,5 +184,13 @@ function console_find_keydown(evt) {
                evt.keyCode === 46) {
         console_find_text(evt, console_find_callback);
     }
+}
+
+function console_find_below() {    
+    console_find_traverse.next();
+}
+
+function console_find_above() {    
+    console_find_traverse.previous();
 }
 

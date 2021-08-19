@@ -118,7 +118,7 @@ function apply() {
 function cancel() {
     //window.close(true);
     if(pdgui.is_webapp()){
-      remove_dialog(pd_object_callback)
+      $("#dialog-modal").modal("hide");
     }
 
     pdgui.pdsend(pd_object_callback, "cancel");
@@ -191,6 +191,12 @@ function add_events(name) {
         });
     }
     pdgui.dialog_bindings(name);
+    if (pdgui.is_webapp) {
+      $("#dialog-modal").on("hidden.bs.modal", function (e) {
+        remove_dialog(pd_object_callback)
+        $("#dialog-modal").off("hidden.bs.modal")
+      })
+    }
 }
   </script>
   </body>

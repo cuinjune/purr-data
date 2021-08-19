@@ -14,11 +14,18 @@ function menu_section_click(id) {
 
     // Show the current menu options
     var m_option = document.getElementById(id);
+    if (m_option.isClickedAgain) {
+        m_option.isClickedAgain = false;
+    } else {
+        m_option.isClickedAgain = true;
+    }
+    m_option.querySelectorAll("ul")[0].style.width = "40px";
+    m_option.querySelectorAll("ul")[0].style.position = "fixed";
     m_option.querySelectorAll("ul")[0].style.display = "block";
 
     // Listen to clicks on the page so can close the menu
     document.onclick = function (e) {
-        if (e.target.id !== id) {
+        if (e.target.id !== id || !document.getElementById(id).isClickedAgain) {
             m_option.querySelectorAll("ul")[0].style.display = "none";
             prev_menu_clicked = undefined;
         }
@@ -100,34 +107,6 @@ function menu_options(type, w, cid) {
                 onclick: function () { menu_section_click("menu-view" + cid) },
                 onmousemove: function () { menu_section_move("menu-view" + cid) }
             }
-        },
-
-        // View entries
-        "view-zoomin": {
-            label: l("menu.zoomin"),
-            key: pdbundle.shortcuts.menu.zoomin_web.key,
-            modifiers: pdbundle.shortcuts.menu.zoomin_web.modifiers,
-            tooltip: l("menu.zoomin_tt")
-        },
-        "view-zoomout": {
-            label: l("menu.zoomout"),
-            key: pdbundle.shortcuts.menu.zoomout_web.key,
-            modifiers: pdbundle.shortcuts.menu.zoomout_web.modifiers,
-            tooltip: l("menu.zoomout_tt")
-        },
-        "view-zoomreset": {
-            label: l("menu.zoomreset"),
-            key: pdbundle.shortcuts.menu.zoomreset_web.key,
-            modifiers: pdbundle.shortcuts.menu.zoomreset_web.modifiers,
-            tooltip: l("menu.zoomreset_tt"),
-            top_hr: {}
-        },
-        "view-fullscreen": {
-            label: l("menu.fullscreen"),
-            key: pdbundle.shortcuts.menu.fullscreen_web.key,
-            modifiers: pdbundle.shortcuts.menu.fullscreen_web.modifiers,
-            tooltip: l("menu.fullscreen_tt"),
-            top_hr: {}
         }
     }
 
@@ -197,10 +176,6 @@ function menu_options(type, w, cid) {
             modifiers: pdbundle.shortcuts.menu.preferences_web.modifiers,
             tooltip: l("menu.preferences_tt")
         },
-
-        // View
-        ...view_base,
-
         // Media section
         "menu-media": {
             label: l("menu.media"),
@@ -430,8 +405,33 @@ function menu_options(type, w, cid) {
 
         // View section
         ...view_base,
-
         // View entries
+        "view-zoomreset": {
+            label: l("menu.zoomreset"),
+            key: pdbundle.shortcuts.menu.zoomreset_web.key,
+            modifiers: pdbundle.shortcuts.menu.zoomreset_web.modifiers,
+            tooltip: l("menu.zoomreset_tt"),
+            top_hr: {}
+        },
+        "view-zoomin": {
+            label: l("menu.zoomin"),
+            key: pdbundle.shortcuts.menu.zoomin_web.key,
+            modifiers: pdbundle.shortcuts.menu.zoomin_web.modifiers,
+            tooltip: l("menu.zoomin_tt")
+        },
+        "view-zoomout": {
+            label: l("menu.zoomout"),
+            key: pdbundle.shortcuts.menu.zoomout_web.key,
+            modifiers: pdbundle.shortcuts.menu.zoomout_web.modifiers,
+            tooltip: l("menu.zoomout_tt")
+        },
+        "view-fullscreen": {
+            label: l("menu.fullscreen"),
+            key: pdbundle.shortcuts.menu.fullscreen_web.key,
+            modifiers: pdbundle.shortcuts.menu.fullscreen_web.modifiers,
+            tooltip: l("menu.fullscreen_tt"),
+            top_hr: {}
+        },
         "view-optimalzoom": {
             label: l("menu.zoomoptimal"),
             key: pdbundle.shortcuts.menu.zoomoptimal_web.key,
@@ -659,16 +659,22 @@ window.key = function (menu_item, shortkey) {
 }
 
 window.modifiers = function (menu_item, modifiers) {
-    var shortkey = modifiers + "+" + tmp_key;
+    var shortkey;
+    if (modifiers) {
+        shortkey = modifiers + "+" + tmp_key;
+    } else {
+        shortkey = tmp_key;
+    }
     window.shortkeys[[tmp_cid]][[shortkey]] = menu_item;
 
     var span = document.createElement("span");
-    span.append(shortkey)
+    span.append(shortkey);
     menu_item.append(span);
 }
 
 window.tooltip = function (menu_item, tooltip) {
-    // console.log("NEED TO IMPLEMENT TOOLTIP", tooltip);
+    menu_item.setAttribute("data-toggle", "tooltip");
+    menu_item.setAttribute("title", tooltip);
 }
 
 window.recent_files = function (elem) {

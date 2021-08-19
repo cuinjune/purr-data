@@ -11,9 +11,9 @@ module.exports = {
 },{"../../../pd/nw/pd_canvas.js":9,"../../../pd/nw/pd_shortcuts.js":11,"../../../pd/nw/pdgui.js":12}],2:[function(require,module,exports){
 
 },{}],3:[function(require,module,exports){
-(function (process){
-// .dirname, .basename, and .extname methods are extracted from Node.js v8.11.1,
-// backported and transplited with Babel, with backwards-compat fixes
+(function (process){(function (){
+// 'path' module extracted from Node.js v8.11.1 (only the posix part)
+// transplited with Babel
 
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -36,286 +36,513 @@ module.exports = {
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// resolves . and .. elements in a path array with directory names there
-// must be no slashes, empty elements, or device names (c:\) in the array
-// (so also no leading and trailing slashes - it does not distinguish
-// relative and absolute paths)
-function normalizeArray(parts, allowAboveRoot) {
-  // if the path tries to go above the root, `up` ends up > 0
-  var up = 0;
-  for (var i = parts.length - 1; i >= 0; i--) {
-    var last = parts[i];
-    if (last === '.') {
-      parts.splice(i, 1);
-    } else if (last === '..') {
-      parts.splice(i, 1);
-      up++;
-    } else if (up) {
-      parts.splice(i, 1);
-      up--;
-    }
-  }
+'use strict';
 
-  // if the path is allowed to go above the root, restore leading ..s
-  if (allowAboveRoot) {
-    for (; up--; up) {
-      parts.unshift('..');
-    }
+function assertPath(path) {
+  if (typeof path !== 'string') {
+    throw new TypeError('Path must be a string. Received ' + JSON.stringify(path));
   }
-
-  return parts;
 }
 
-// path.resolve([from ...], to)
-// posix version
-exports.resolve = function() {
-  var resolvedPath = '',
-      resolvedAbsolute = false;
-
-  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
-    var path = (i >= 0) ? arguments[i] : process.cwd();
-
-    // Skip empty and invalid entries
-    if (typeof path !== 'string') {
-      throw new TypeError('Arguments to path.resolve must be strings');
-    } else if (!path) {
-      continue;
-    }
-
-    resolvedPath = path + '/' + resolvedPath;
-    resolvedAbsolute = path.charAt(0) === '/';
-  }
-
-  // At this point the path should be resolved to a full absolute path, but
-  // handle relative paths to be safe (might happen when process.cwd() fails)
-
-  // Normalize the path
-  resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
-    return !!p;
-  }), !resolvedAbsolute).join('/');
-
-  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-};
-
-// path.normalize(path)
-// posix version
-exports.normalize = function(path) {
-  var isAbsolute = exports.isAbsolute(path),
-      trailingSlash = substr(path, -1) === '/';
-
-  // Normalize the path
-  path = normalizeArray(filter(path.split('/'), function(p) {
-    return !!p;
-  }), !isAbsolute).join('/');
-
-  if (!path && !isAbsolute) {
-    path = '.';
-  }
-  if (path && trailingSlash) {
-    path += '/';
-  }
-
-  return (isAbsolute ? '/' : '') + path;
-};
-
-// posix version
-exports.isAbsolute = function(path) {
-  return path.charAt(0) === '/';
-};
-
-// posix version
-exports.join = function() {
-  var paths = Array.prototype.slice.call(arguments, 0);
-  return exports.normalize(filter(paths, function(p, index) {
-    if (typeof p !== 'string') {
-      throw new TypeError('Arguments to path.join must be strings');
-    }
-    return p;
-  }).join('/'));
-};
-
-
-// path.relative(from, to)
-// posix version
-exports.relative = function(from, to) {
-  from = exports.resolve(from).substr(1);
-  to = exports.resolve(to).substr(1);
-
-  function trim(arr) {
-    var start = 0;
-    for (; start < arr.length; start++) {
-      if (arr[start] !== '') break;
-    }
-
-    var end = arr.length - 1;
-    for (; end >= 0; end--) {
-      if (arr[end] !== '') break;
-    }
-
-    if (start > end) return [];
-    return arr.slice(start, end - start + 1);
-  }
-
-  var fromParts = trim(from.split('/'));
-  var toParts = trim(to.split('/'));
-
-  var length = Math.min(fromParts.length, toParts.length);
-  var samePartsLength = length;
-  for (var i = 0; i < length; i++) {
-    if (fromParts[i] !== toParts[i]) {
-      samePartsLength = i;
+// Resolves . and .. elements in a path with directory names
+function normalizeStringPosix(path, allowAboveRoot) {
+  var res = '';
+  var lastSegmentLength = 0;
+  var lastSlash = -1;
+  var dots = 0;
+  var code;
+  for (var i = 0; i <= path.length; ++i) {
+    if (i < path.length)
+      code = path.charCodeAt(i);
+    else if (code === 47 /*/*/)
       break;
-    }
-  }
-
-  var outputParts = [];
-  for (var i = samePartsLength; i < fromParts.length; i++) {
-    outputParts.push('..');
-  }
-
-  outputParts = outputParts.concat(toParts.slice(samePartsLength));
-
-  return outputParts.join('/');
-};
-
-exports.sep = '/';
-exports.delimiter = ':';
-
-exports.dirname = function (path) {
-  if (typeof path !== 'string') path = path + '';
-  if (path.length === 0) return '.';
-  var code = path.charCodeAt(0);
-  var hasRoot = code === 47 /*/*/;
-  var end = -1;
-  var matchedSlash = true;
-  for (var i = path.length - 1; i >= 1; --i) {
-    code = path.charCodeAt(i);
+    else
+      code = 47 /*/*/;
     if (code === 47 /*/*/) {
-        if (!matchedSlash) {
-          end = i;
-          break;
+      if (lastSlash === i - 1 || dots === 1) {
+        // NOOP
+      } else if (lastSlash !== i - 1 && dots === 2) {
+        if (res.length < 2 || lastSegmentLength !== 2 || res.charCodeAt(res.length - 1) !== 46 /*.*/ || res.charCodeAt(res.length - 2) !== 46 /*.*/) {
+          if (res.length > 2) {
+            var lastSlashIndex = res.lastIndexOf('/');
+            if (lastSlashIndex !== res.length - 1) {
+              if (lastSlashIndex === -1) {
+                res = '';
+                lastSegmentLength = 0;
+              } else {
+                res = res.slice(0, lastSlashIndex);
+                lastSegmentLength = res.length - 1 - res.lastIndexOf('/');
+              }
+              lastSlash = i;
+              dots = 0;
+              continue;
+            }
+          } else if (res.length === 2 || res.length === 1) {
+            res = '';
+            lastSegmentLength = 0;
+            lastSlash = i;
+            dots = 0;
+            continue;
+          }
+        }
+        if (allowAboveRoot) {
+          if (res.length > 0)
+            res += '/..';
+          else
+            res = '..';
+          lastSegmentLength = 2;
         }
       } else {
-      // We saw the first non-path separator
-      matchedSlash = false;
+        if (res.length > 0)
+          res += '/' + path.slice(lastSlash + 1, i);
+        else
+          res = path.slice(lastSlash + 1, i);
+        lastSegmentLength = i - lastSlash - 1;
+      }
+      lastSlash = i;
+      dots = 0;
+    } else if (code === 46 /*.*/ && dots !== -1) {
+      ++dots;
+    } else {
+      dots = -1;
     }
   }
-
-  if (end === -1) return hasRoot ? '/' : '.';
-  if (hasRoot && end === 1) {
-    // return '//';
-    // Backwards-compat fix:
-    return '/';
-  }
-  return path.slice(0, end);
-};
-
-function basename(path) {
-  if (typeof path !== 'string') path = path + '';
-
-  var start = 0;
-  var end = -1;
-  var matchedSlash = true;
-  var i;
-
-  for (i = path.length - 1; i >= 0; --i) {
-    if (path.charCodeAt(i) === 47 /*/*/) {
-        // If we reached a path separator that was not part of a set of path
-        // separators at the end of the string, stop now
-        if (!matchedSlash) {
-          start = i + 1;
-          break;
-        }
-      } else if (end === -1) {
-      // We saw the first non-path separator, mark this as the end of our
-      // path component
-      matchedSlash = false;
-      end = i + 1;
-    }
-  }
-
-  if (end === -1) return '';
-  return path.slice(start, end);
+  return res;
 }
 
-// Uses a mixed approach for backwards-compatibility, as ext behavior changed
-// in new Node.js versions, so only basename() above is backported here
-exports.basename = function (path, ext) {
-  var f = basename(path);
-  if (ext && f.substr(-1 * ext.length) === ext) {
-    f = f.substr(0, f.length - ext.length);
+function _format(sep, pathObject) {
+  var dir = pathObject.dir || pathObject.root;
+  var base = pathObject.base || (pathObject.name || '') + (pathObject.ext || '');
+  if (!dir) {
+    return base;
   }
-  return f;
-};
+  if (dir === pathObject.root) {
+    return dir + base;
+  }
+  return dir + sep + base;
+}
 
-exports.extname = function (path) {
-  if (typeof path !== 'string') path = path + '';
-  var startDot = -1;
-  var startPart = 0;
-  var end = -1;
-  var matchedSlash = true;
-  // Track the state of characters (if any) we see before our first dot and
-  // after any path separator we find
-  var preDotState = 0;
-  for (var i = path.length - 1; i >= 0; --i) {
-    var code = path.charCodeAt(i);
-    if (code === 47 /*/*/) {
-        // If we reached a path separator that was not part of a set of path
-        // separators at the end of the string, stop now
-        if (!matchedSlash) {
-          startPart = i + 1;
-          break;
-        }
+var posix = {
+  // path.resolve([from ...], to)
+  resolve: function resolve() {
+    var resolvedPath = '';
+    var resolvedAbsolute = false;
+    var cwd;
+
+    for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+      var path;
+      if (i >= 0)
+        path = arguments[i];
+      else {
+        if (cwd === undefined)
+          cwd = process.cwd();
+        path = cwd;
+      }
+
+      assertPath(path);
+
+      // Skip empty entries
+      if (path.length === 0) {
         continue;
       }
-    if (end === -1) {
-      // We saw the first non-path separator, mark this as the end of our
-      // extension
-      matchedSlash = false;
-      end = i + 1;
-    }
-    if (code === 46 /*.*/) {
-        // If this is our first dot, mark it as the start of our extension
-        if (startDot === -1)
-          startDot = i;
-        else if (preDotState !== 1)
-          preDotState = 1;
-    } else if (startDot !== -1) {
-      // We saw a non-dot and non-path separator before our dot, so we should
-      // have a good chance at having a non-empty extension
-      preDotState = -1;
-    }
-  }
 
-  if (startDot === -1 || end === -1 ||
-      // We saw a non-dot character immediately before the dot
-      preDotState === 0 ||
-      // The (right-most) trimmed path component is exactly '..'
-      preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
-    return '';
-  }
-  return path.slice(startDot, end);
+      resolvedPath = path + '/' + resolvedPath;
+      resolvedAbsolute = path.charCodeAt(0) === 47 /*/*/;
+    }
+
+    // At this point the path should be resolved to a full absolute path, but
+    // handle relative paths to be safe (might happen when process.cwd() fails)
+
+    // Normalize the path
+    resolvedPath = normalizeStringPosix(resolvedPath, !resolvedAbsolute);
+
+    if (resolvedAbsolute) {
+      if (resolvedPath.length > 0)
+        return '/' + resolvedPath;
+      else
+        return '/';
+    } else if (resolvedPath.length > 0) {
+      return resolvedPath;
+    } else {
+      return '.';
+    }
+  },
+
+  normalize: function normalize(path) {
+    assertPath(path);
+
+    if (path.length === 0) return '.';
+
+    var isAbsolute = path.charCodeAt(0) === 47 /*/*/;
+    var trailingSeparator = path.charCodeAt(path.length - 1) === 47 /*/*/;
+
+    // Normalize the path
+    path = normalizeStringPosix(path, !isAbsolute);
+
+    if (path.length === 0 && !isAbsolute) path = '.';
+    if (path.length > 0 && trailingSeparator) path += '/';
+
+    if (isAbsolute) return '/' + path;
+    return path;
+  },
+
+  isAbsolute: function isAbsolute(path) {
+    assertPath(path);
+    return path.length > 0 && path.charCodeAt(0) === 47 /*/*/;
+  },
+
+  join: function join() {
+    if (arguments.length === 0)
+      return '.';
+    var joined;
+    for (var i = 0; i < arguments.length; ++i) {
+      var arg = arguments[i];
+      assertPath(arg);
+      if (arg.length > 0) {
+        if (joined === undefined)
+          joined = arg;
+        else
+          joined += '/' + arg;
+      }
+    }
+    if (joined === undefined)
+      return '.';
+    return posix.normalize(joined);
+  },
+
+  relative: function relative(from, to) {
+    assertPath(from);
+    assertPath(to);
+
+    if (from === to) return '';
+
+    from = posix.resolve(from);
+    to = posix.resolve(to);
+
+    if (from === to) return '';
+
+    // Trim any leading backslashes
+    var fromStart = 1;
+    for (; fromStart < from.length; ++fromStart) {
+      if (from.charCodeAt(fromStart) !== 47 /*/*/)
+        break;
+    }
+    var fromEnd = from.length;
+    var fromLen = fromEnd - fromStart;
+
+    // Trim any leading backslashes
+    var toStart = 1;
+    for (; toStart < to.length; ++toStart) {
+      if (to.charCodeAt(toStart) !== 47 /*/*/)
+        break;
+    }
+    var toEnd = to.length;
+    var toLen = toEnd - toStart;
+
+    // Compare paths to find the longest common path from root
+    var length = fromLen < toLen ? fromLen : toLen;
+    var lastCommonSep = -1;
+    var i = 0;
+    for (; i <= length; ++i) {
+      if (i === length) {
+        if (toLen > length) {
+          if (to.charCodeAt(toStart + i) === 47 /*/*/) {
+            // We get here if `from` is the exact base path for `to`.
+            // For example: from='/foo/bar'; to='/foo/bar/baz'
+            return to.slice(toStart + i + 1);
+          } else if (i === 0) {
+            // We get here if `from` is the root
+            // For example: from='/'; to='/foo'
+            return to.slice(toStart + i);
+          }
+        } else if (fromLen > length) {
+          if (from.charCodeAt(fromStart + i) === 47 /*/*/) {
+            // We get here if `to` is the exact base path for `from`.
+            // For example: from='/foo/bar/baz'; to='/foo/bar'
+            lastCommonSep = i;
+          } else if (i === 0) {
+            // We get here if `to` is the root.
+            // For example: from='/foo'; to='/'
+            lastCommonSep = 0;
+          }
+        }
+        break;
+      }
+      var fromCode = from.charCodeAt(fromStart + i);
+      var toCode = to.charCodeAt(toStart + i);
+      if (fromCode !== toCode)
+        break;
+      else if (fromCode === 47 /*/*/)
+        lastCommonSep = i;
+    }
+
+    var out = '';
+    // Generate the relative path based on the path difference between `to`
+    // and `from`
+    for (i = fromStart + lastCommonSep + 1; i <= fromEnd; ++i) {
+      if (i === fromEnd || from.charCodeAt(i) === 47 /*/*/) {
+        if (out.length === 0)
+          out += '..';
+        else
+          out += '/..';
+      }
+    }
+
+    // Lastly, append the rest of the destination (`to`) path that comes after
+    // the common path parts
+    if (out.length > 0)
+      return out + to.slice(toStart + lastCommonSep);
+    else {
+      toStart += lastCommonSep;
+      if (to.charCodeAt(toStart) === 47 /*/*/)
+        ++toStart;
+      return to.slice(toStart);
+    }
+  },
+
+  _makeLong: function _makeLong(path) {
+    return path;
+  },
+
+  dirname: function dirname(path) {
+    assertPath(path);
+    if (path.length === 0) return '.';
+    var code = path.charCodeAt(0);
+    var hasRoot = code === 47 /*/*/;
+    var end = -1;
+    var matchedSlash = true;
+    for (var i = path.length - 1; i >= 1; --i) {
+      code = path.charCodeAt(i);
+      if (code === 47 /*/*/) {
+          if (!matchedSlash) {
+            end = i;
+            break;
+          }
+        } else {
+        // We saw the first non-path separator
+        matchedSlash = false;
+      }
+    }
+
+    if (end === -1) return hasRoot ? '/' : '.';
+    if (hasRoot && end === 1) return '//';
+    return path.slice(0, end);
+  },
+
+  basename: function basename(path, ext) {
+    if (ext !== undefined && typeof ext !== 'string') throw new TypeError('"ext" argument must be a string');
+    assertPath(path);
+
+    var start = 0;
+    var end = -1;
+    var matchedSlash = true;
+    var i;
+
+    if (ext !== undefined && ext.length > 0 && ext.length <= path.length) {
+      if (ext.length === path.length && ext === path) return '';
+      var extIdx = ext.length - 1;
+      var firstNonSlashEnd = -1;
+      for (i = path.length - 1; i >= 0; --i) {
+        var code = path.charCodeAt(i);
+        if (code === 47 /*/*/) {
+            // If we reached a path separator that was not part of a set of path
+            // separators at the end of the string, stop now
+            if (!matchedSlash) {
+              start = i + 1;
+              break;
+            }
+          } else {
+          if (firstNonSlashEnd === -1) {
+            // We saw the first non-path separator, remember this index in case
+            // we need it if the extension ends up not matching
+            matchedSlash = false;
+            firstNonSlashEnd = i + 1;
+          }
+          if (extIdx >= 0) {
+            // Try to match the explicit extension
+            if (code === ext.charCodeAt(extIdx)) {
+              if (--extIdx === -1) {
+                // We matched the extension, so mark this as the end of our path
+                // component
+                end = i;
+              }
+            } else {
+              // Extension does not match, so our result is the entire path
+              // component
+              extIdx = -1;
+              end = firstNonSlashEnd;
+            }
+          }
+        }
+      }
+
+      if (start === end) end = firstNonSlashEnd;else if (end === -1) end = path.length;
+      return path.slice(start, end);
+    } else {
+      for (i = path.length - 1; i >= 0; --i) {
+        if (path.charCodeAt(i) === 47 /*/*/) {
+            // If we reached a path separator that was not part of a set of path
+            // separators at the end of the string, stop now
+            if (!matchedSlash) {
+              start = i + 1;
+              break;
+            }
+          } else if (end === -1) {
+          // We saw the first non-path separator, mark this as the end of our
+          // path component
+          matchedSlash = false;
+          end = i + 1;
+        }
+      }
+
+      if (end === -1) return '';
+      return path.slice(start, end);
+    }
+  },
+
+  extname: function extname(path) {
+    assertPath(path);
+    var startDot = -1;
+    var startPart = 0;
+    var end = -1;
+    var matchedSlash = true;
+    // Track the state of characters (if any) we see before our first dot and
+    // after any path separator we find
+    var preDotState = 0;
+    for (var i = path.length - 1; i >= 0; --i) {
+      var code = path.charCodeAt(i);
+      if (code === 47 /*/*/) {
+          // If we reached a path separator that was not part of a set of path
+          // separators at the end of the string, stop now
+          if (!matchedSlash) {
+            startPart = i + 1;
+            break;
+          }
+          continue;
+        }
+      if (end === -1) {
+        // We saw the first non-path separator, mark this as the end of our
+        // extension
+        matchedSlash = false;
+        end = i + 1;
+      }
+      if (code === 46 /*.*/) {
+          // If this is our first dot, mark it as the start of our extension
+          if (startDot === -1)
+            startDot = i;
+          else if (preDotState !== 1)
+            preDotState = 1;
+      } else if (startDot !== -1) {
+        // We saw a non-dot and non-path separator before our dot, so we should
+        // have a good chance at having a non-empty extension
+        preDotState = -1;
+      }
+    }
+
+    if (startDot === -1 || end === -1 ||
+        // We saw a non-dot character immediately before the dot
+        preDotState === 0 ||
+        // The (right-most) trimmed path component is exactly '..'
+        preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
+      return '';
+    }
+    return path.slice(startDot, end);
+  },
+
+  format: function format(pathObject) {
+    if (pathObject === null || typeof pathObject !== 'object') {
+      throw new TypeError('The "pathObject" argument must be of type Object. Received type ' + typeof pathObject);
+    }
+    return _format('/', pathObject);
+  },
+
+  parse: function parse(path) {
+    assertPath(path);
+
+    var ret = { root: '', dir: '', base: '', ext: '', name: '' };
+    if (path.length === 0) return ret;
+    var code = path.charCodeAt(0);
+    var isAbsolute = code === 47 /*/*/;
+    var start;
+    if (isAbsolute) {
+      ret.root = '/';
+      start = 1;
+    } else {
+      start = 0;
+    }
+    var startDot = -1;
+    var startPart = 0;
+    var end = -1;
+    var matchedSlash = true;
+    var i = path.length - 1;
+
+    // Track the state of characters (if any) we see before our first dot and
+    // after any path separator we find
+    var preDotState = 0;
+
+    // Get non-dir info
+    for (; i >= start; --i) {
+      code = path.charCodeAt(i);
+      if (code === 47 /*/*/) {
+          // If we reached a path separator that was not part of a set of path
+          // separators at the end of the string, stop now
+          if (!matchedSlash) {
+            startPart = i + 1;
+            break;
+          }
+          continue;
+        }
+      if (end === -1) {
+        // We saw the first non-path separator, mark this as the end of our
+        // extension
+        matchedSlash = false;
+        end = i + 1;
+      }
+      if (code === 46 /*.*/) {
+          // If this is our first dot, mark it as the start of our extension
+          if (startDot === -1) startDot = i;else if (preDotState !== 1) preDotState = 1;
+        } else if (startDot !== -1) {
+        // We saw a non-dot and non-path separator before our dot, so we should
+        // have a good chance at having a non-empty extension
+        preDotState = -1;
+      }
+    }
+
+    if (startDot === -1 || end === -1 ||
+    // We saw a non-dot character immediately before the dot
+    preDotState === 0 ||
+    // The (right-most) trimmed path component is exactly '..'
+    preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
+      if (end !== -1) {
+        if (startPart === 0 && isAbsolute) ret.base = ret.name = path.slice(1, end);else ret.base = ret.name = path.slice(startPart, end);
+      }
+    } else {
+      if (startPart === 0 && isAbsolute) {
+        ret.name = path.slice(1, startDot);
+        ret.base = path.slice(1, end);
+      } else {
+        ret.name = path.slice(startPart, startDot);
+        ret.base = path.slice(startPart, end);
+      }
+      ret.ext = path.slice(startDot, end);
+    }
+
+    if (startPart > 0) ret.dir = path.slice(0, startPart - 1);else if (isAbsolute) ret.dir = '/';
+
+    return ret;
+  },
+
+  sep: '/',
+  delimiter: ':',
+  win32: null,
+  posix: null
 };
 
-function filter (xs, f) {
-    if (xs.filter) return xs.filter(f);
-    var res = [];
-    for (var i = 0; i < xs.length; i++) {
-        if (f(xs[i], i, xs)) res.push(xs[i]);
-    }
-    return res;
-}
+posix.posix = posix;
 
-// String.prototype.substr - negative index don't work in IE8
-var substr = 'ab'.substr(-1) === 'b'
-    ? function (str, start, len) { return str.substr(start, len) }
-    : function (str, start, len) {
-        if (start < 0) start = str.length + start;
-        return str.substr(start, len);
-    }
-;
+module.exports = posix;
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"_process":4}],4:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
@@ -503,7 +730,7 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],5:[function(require,module,exports){
-(function (process){
+(function (process){(function (){
 var fs = require('fs');
 var path = require('path');
 
@@ -615,7 +842,7 @@ module.exports = function(dir, opt, action, complete) {
 };
 
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"_process":4,"fs":2,"path":3}],6:[function(require,module,exports){
 /**
  * elasticlunr - http://weixsong.github.io
@@ -3263,7 +3490,7 @@ function parseValues(args) {
 }
 
 },{}],9:[function(require,module,exports){
-(function (process){
+(function (process){(function (){
 "use strict";
 
 var pdgui = require("./pdgui.js");
@@ -3761,7 +3988,7 @@ var canvas_events = (function() {
             },
             text_keydown: function(evt) {
                 if (pdgui.is_webapp()) { // temporary fix
-                    if (pdgui.cmd_or_ctrl_key(evt) && evt.altKey) {
+                    if (pdgui.cmd_or_ctrl_key(evt)) {
                         return false;
                     }
                 }
@@ -4127,6 +4354,11 @@ var canvas_events = (function() {
 
                 var canvas_content = document.getElementById("canvas-content");
                 canvas_content.addEventListener("scroll", events.window_recalculate, false);
+
+                var patches = document.getElementsByClassName("patch");
+                for (var i = 0; i < patches.length; i++) {
+                    patches[i].addEventListener("scroll", events.window_recalculate, false);
+                }
 
                 // Add listeners to keyevents
                 document.addEventListener("keydown", events.keydown, false);
@@ -4713,6 +4945,10 @@ function create_popup_menu(name) {
             label: l("canvas.menu.props"),
             click: function() {
                 pdgui.popup_action(name, 0);
+                // show sidebar
+                $("#sidebar").collapse("show");
+                $("#sidebar-col-icon").removeClass("rotate");
+
             }
         },
         open: {
@@ -5406,6 +5642,9 @@ function load_canvas_menu_actions(name, filename){
     minit("file-close"+name, {
         onclick: function() { pdgui.menu_close(name); }
     });
+    minit("close-canvas"+name, {
+        onclick: function() { pdgui.menu_close(name); }
+    });
     
 
     // Edit entries
@@ -5635,6 +5874,9 @@ function load_canvas_menu_actions(name, filename){
                 update_live_box();
                 pdgui.pdsend(name, "dirty 1");
                 pdgui.pdsend(name, "menuarray");
+                // show sidebar
+                $("#sidebar").collapse("show");
+                $("#sidebar-col-icon").removeClass("rotate");
             }
     });
 
@@ -5663,9 +5905,9 @@ function load_canvas_menu_actions(name, filename){
     });
 }
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"./pd_menus.js":10,"./pdgui.js":12,"_process":4,"nw.gui":2}],10:[function(require,module,exports){
-(function (process){
+(function (process){(function (){
 "use strict";
 
 var pdgui = require("./pdgui.js");
@@ -6343,51 +6585,51 @@ function create_menu(gui, type) {
 
 exports.create_menu = create_menu;
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"./pd_shortcuts.js":11,"./pdgui.js":12,"_process":4}],11:[function(require,module,exports){
-(function (process){
+(function (process){(function (){
 "use strict";
 
-var cmd_or_ctrl = (process.platform === "darwin") ? "cmd" : "ctrl";
+var cmd_or_ctrl = (process.platform === "darwin") ? "Cmd" : "Ctrl";
 
 exports.menu = {
-  "new":   { key: "n", modifiers: cmd_or_ctrl },
-  "open":   { key: "o", modifiers: cmd_or_ctrl },
-  "save":   { key: "s", modifiers: cmd_or_ctrl },
-  "saveas": { key: "s", modifiers: cmd_or_ctrl + "+shift" },
-  "print":  { key: "p", modifiers: cmd_or_ctrl + "+shift" },
-  "message" : { key: "m", modifiers: cmd_or_ctrl },
-  "close":  { key: "w", modifiers: cmd_or_ctrl },
-  "quit":   { key: "q", modifiers: cmd_or_ctrl },
+  "new":   { key: "N", modifiers: cmd_or_ctrl },
+  "open":   { key: "O", modifiers: cmd_or_ctrl },
+  "save":   { key: "S", modifiers: cmd_or_ctrl },
+  "saveas": { key: "S", modifiers: cmd_or_ctrl + "+Shift" },
+  "print":  { key: "P", modifiers: cmd_or_ctrl + "+Shift" },
+  "message" : { key: "M", modifiers: cmd_or_ctrl },
+  "close":  { key: "W", modifiers: cmd_or_ctrl },
+  "quit":   { key: "Q", modifiers: cmd_or_ctrl },
 
-  "undo":   { key: "z", modifiers: cmd_or_ctrl },
-  "redo":   { key: "z", modifiers: cmd_or_ctrl + "+shift" },
-  "selectall":{ key: "a", modifiers: cmd_or_ctrl },
-  "cut":    { key: "x", modifiers: cmd_or_ctrl },
-  "copy":   { key: "c", modifiers: cmd_or_ctrl },
-  "paste":  { key: "v", modifiers: cmd_or_ctrl },
-  "paste_clipboard": { key: "v", modifiers: cmd_or_ctrl + "+alt" },
-  "duplicate": { key: "d", modifiers: cmd_or_ctrl },
-  "undo":   { key: "z", modifiers: cmd_or_ctrl },
+  "undo":   { key: "Z", modifiers: cmd_or_ctrl },
+  "redo":   { key: "Z", modifiers: cmd_or_ctrl + "+Shift" },
+  "selectall":{ key: "A", modifiers: cmd_or_ctrl },
+  "cut":    { key: "X", modifiers: cmd_or_ctrl },
+  "copy":   { key: "C", modifiers: cmd_or_ctrl },
+  "paste":  { key: "V", modifiers: cmd_or_ctrl },
+  "paste_clipboard": { key: "V", modifiers: cmd_or_ctrl + "+Alt" },
+  "duplicate": { key: "D", modifiers: cmd_or_ctrl },
+  "undo":   { key: "Z", modifiers: cmd_or_ctrl },
 
   "reselect": { key: String.fromCharCode(10), modifiers: cmd_or_ctrl },
-  "clear_console": { key: "l", modifiers: cmd_or_ctrl + "+shift" },
-  "tidyup": { key: "y", modifiers: cmd_or_ctrl },
-  "cordinspector":   { key: "r", modifiers: cmd_or_ctrl + "+shift" },
-  "find":   { key: "f", modifiers: cmd_or_ctrl },
-  "findagain":{ key: "g", modifiers: cmd_or_ctrl },
-  "editmode": { key: "e", modifiers: cmd_or_ctrl },
-  "preferences": { key: (process.platform === "darwin") ? "," : "p",
+  "clear_console": { key: "L", modifiers: cmd_or_ctrl + "+Shift" },
+  "tidyup": { key: "Y", modifiers: cmd_or_ctrl },
+  "cordinspector":   { key: "R", modifiers: cmd_or_ctrl + "+Shift" },
+  "find":   { key: "F", modifiers: cmd_or_ctrl },
+  "findagain":{ key: "G", modifiers: cmd_or_ctrl },
+  "editmode": { key: "E", modifiers: cmd_or_ctrl },
+  "preferences": { key: (process.platform === "darwin") ? "," : "P",
     modifiers: cmd_or_ctrl },
 
   "zoomin": { key: "=", modifiers: cmd_or_ctrl },
   "zoomout": { key: "-", modifiers: cmd_or_ctrl },
   "zoomreset": { key: "0", modifiers: cmd_or_ctrl },
   "zoomoptimal": { key: "9", modifiers: cmd_or_ctrl },
-  "zoomhoriz": { key: "9", modifiers: cmd_or_ctrl + "+alt" },
-  "zoomvert": { key: "9", modifiers: cmd_or_ctrl + "+shift" },
-  "fullscreen": { key: (process.platform === "darwin") ? "f" : "F11",
-    modifiers: (process.platform === "darwin") ? "cmd+ctrl" : null },
+  "zoomhoriz": { key: "9", modifiers: cmd_or_ctrl + "+Alt" },
+  "zoomvert": { key: "9", modifiers: cmd_or_ctrl + "+Shift" },
+  "fullscreen": { key: (process.platform === "darwin") ? "F" : "F11",
+    modifiers: (process.platform === "darwin") ? "Cmd+Ctrl" : null },
 
   "object": { key: "1", modifiers: cmd_or_ctrl },
   "msgbox": { key: "2", modifiers: cmd_or_ctrl },
@@ -6395,96 +6637,96 @@ exports.menu = {
   "symbol": { key: "4", modifiers: cmd_or_ctrl },
   "comment": { key: "5", modifiers: cmd_or_ctrl },
   "dropdown": { key: "6", modifiers: cmd_or_ctrl },
-  "bang": { key: "b", modifiers: cmd_or_ctrl + "+shift" },
-  "toggle": { key: "t", modifiers: cmd_or_ctrl + "+shift" },
-  "number2": { key: "n", modifiers: cmd_or_ctrl + "+shift" },
-  "vslider": { key: "v", modifiers: cmd_or_ctrl + "+shift" },
-  "hslider": { key: "h", modifiers: cmd_or_ctrl + "+shift" },
-  "vradio": { key: "d", modifiers: cmd_or_ctrl + "+shift" },
-  "hradio": { key: "i", modifiers: cmd_or_ctrl + "+shift" },
-  "vu":     { key: "u", modifiers: cmd_or_ctrl + "+shift" },
-  "cnv": { key: "c", modifiers: cmd_or_ctrl + "+shift" },
+  "bang": { key: "B", modifiers: cmd_or_ctrl + "+Shift" },
+  "toggle": { key: "T", modifiers: cmd_or_ctrl + "+Shift" },
+  "number2": { key: "N", modifiers: cmd_or_ctrl + "+Shift" },
+  "vslider": { key: "V", modifiers: cmd_or_ctrl + "+Shift" },
+  "hslider": { key: "H", modifiers: cmd_or_ctrl + "+Shift" },
+  "vradio": { key: "D", modifiers: cmd_or_ctrl + "+Shift" },
+  "hradio": { key: "I", modifiers: cmd_or_ctrl + "+Shift" },
+  "vu":     { key: "U", modifiers: cmd_or_ctrl + "+Shift" },
+  "cnv": { key: "C", modifiers: cmd_or_ctrl + "+Shift" },
 
   "nextwin": { key: "PageDown", modifiers: cmd_or_ctrl },
   "prevwin": { key: "PageUp", modifiers: cmd_or_ctrl },
-  "pdwin": { key: "r", modifiers: cmd_or_ctrl },
+  "pdwin": { key: "R", modifiers: cmd_or_ctrl },
 
   "audio_on": { key: "/", modifiers: cmd_or_ctrl },
   "audio_off": { key: ".", modifiers: cmd_or_ctrl },
 
-  "browser": { key: "b", modifiers: cmd_or_ctrl },
+  "browser": { key: "B", modifiers: cmd_or_ctrl },
   "audio_off": { key: ".", modifiers: cmd_or_ctrl },
   "audio_off": { key: ".", modifiers: cmd_or_ctrl },
   "audio_off": { key: ".", modifiers: cmd_or_ctrl },
 
 
   // Webapp shortcuts
-  "new_web":   { key: "n", modifiers: cmd_or_ctrl + "+alt"},
-  "open_web":   { key: "o", modifiers: cmd_or_ctrl + "+alt"},
-  "save_web":   { key: "s", modifiers: cmd_or_ctrl + "+alt" },
-  "saveas_web": { key: "s", modifiers: cmd_or_ctrl + "+shift" },
-  "print_web":  { key: "p", modifiers: cmd_or_ctrl + "+alt" },
-  "message_web" : { key: "m", modifiers: cmd_or_ctrl + "+alt"},
-  "close_web":  { key: "w", modifiers: cmd_or_ctrl + "+alt" },
+  "new_web":   { key: "N", modifiers: cmd_or_ctrl },
+  "open_web":   { key: "O", modifiers: cmd_or_ctrl },
+  "save_web":   { key: "S", modifiers: cmd_or_ctrl },
+  "saveas_web": { key: "S", modifiers: cmd_or_ctrl + "+Shift" },
+  "print_web":  { key: "P", modifiers: cmd_or_ctrl },
+  "message_web" : { key: "M", modifiers: cmd_or_ctrl },
+  "close_web":  { key: "W", modifiers: cmd_or_ctrl },
 
-  "undo_web":   { key: "z", modifiers: cmd_or_ctrl + "+alt" },
-  "redo_web":   { key: "z", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "selectall_web":{ key: "q", modifiers: cmd_or_ctrl + "+shift"},
-  "cut_web":    { key: "x", modifiers: cmd_or_ctrl + "+shift" },
-  "copy_web":   { key: "c", modifiers: cmd_or_ctrl + "+alt"},
-  "paste_web":  { key: "v", modifiers: cmd_or_ctrl + "+alt" },
-  "paste_clipboard_web": { key: "g", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "duplicate_web": { key: "d", modifiers: cmd_or_ctrl + "+alt" },
+  "undo_web":   { key: "Z", modifiers: cmd_or_ctrl },
+  "redo_web":   { key: "Z", modifiers: cmd_or_ctrl + "+Shift" },
+  "selectall_web":{ key: "Q", modifiers: cmd_or_ctrl + "+Shift"},
+  "cut_web":    { key: "X", modifiers: cmd_or_ctrl },
+  "copy_web":   { key: "C", modifiers: cmd_or_ctrl },
+  "paste_web":  { key: "V", modifiers: cmd_or_ctrl },
+  "paste_clipboard_web": { key: "G", modifiers: cmd_or_ctrl + "+Shift" },
+  "duplicate_web": { key: "D", modifiers: cmd_or_ctrl },
 
-  "reselect_web": { key: "q", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "clear_console_web": { key: "l", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "tidyup_web": { key: "y", modifiers: cmd_or_ctrl + "+alt" },
-  "cordinspector_web":   { key: "r", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "find_web":   { key: "f", modifiers: cmd_or_ctrl + "+alt"},
-  "findagain_web":{ key: "f", modifiers: cmd_or_ctrl + "+shift+alt"},
-  "editmode_web": { key: "e", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "preferences_web": { key: (process.platform === "darwin") ? "," : "p",
+  "reselect_web": { key: "Q", modifiers: cmd_or_ctrl + "+Shift" },
+  "clear_console_web": { key: "L", modifiers: cmd_or_ctrl + "+Shift" },
+  "tidyup_web": { key: "Y", modifiers: cmd_or_ctrl },
+  "cordinspector_web":   { key: "R", modifiers: cmd_or_ctrl + "+Shift" },
+  "find_web":   { key: "F", modifiers: cmd_or_ctrl },
+  "findagain_web":{ key: "F", modifiers: cmd_or_ctrl + "+Shift"},
+  "editmode_web": { key: "E", modifiers: cmd_or_ctrl },
+  "preferences_web": { key: (process.platform === "darwin") ? "," : "P",
     modifiers: cmd_or_ctrl },
 
   "zoomin_web": { key: "=", modifiers: cmd_or_ctrl },
   "zoomout_web": { key: "-", modifiers: cmd_or_ctrl },
   "zoomreset_web": { key: "0", modifiers: cmd_or_ctrl },
   "zoomoptimal_web": { key: "9", modifiers: cmd_or_ctrl },
-  "zoomhoriz_web": { key: "9", modifiers: cmd_or_ctrl + "+alt" },
-  "zoomvert_web": { key: "9", modifiers: cmd_or_ctrl + "+shift" },
-  "fullscreen_web": { key: (process.platform === "darwin") ? "f" : "F11",
-    modifiers: (process.platform === "darwin") ? "cmd+ctrl" : null },
+  "zoomhoriz_web": { key: "9", modifiers: cmd_or_ctrl },
+  "zoomvert_web": { key: "9", modifiers: cmd_or_ctrl + "+Shift" },
+  "fullscreen_web": { key: (process.platform === "darwin") ? "F" : "F11",
+    modifiers: (process.platform === "darwin") ? "Cmd+Ctrl" : null },
 
-  "object_web": { key: "1", modifiers: cmd_or_ctrl + "+alt" },
-  "msgbox_web": { key: "2", modifiers: cmd_or_ctrl + "+alt" },
-  "number_web": { key: "3", modifiers: cmd_or_ctrl + "+alt" },
-  "symbol_web": { key: "4", modifiers: cmd_or_ctrl + "+alt" },
-  "comment_web": { key: "5", modifiers: cmd_or_ctrl + "+alt" },
-  "dropdown_web": { key: "m", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "bang_web": { key: "b", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "toggle_web": { key: "t", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "number2_web": { key: "n", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "vslider_web": { key: "v", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "hslider_web": { key: "h", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "vradio_web": { key: "d", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "hradio_web": { key: "i", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "vu_web":     { key: "u", modifiers: cmd_or_ctrl + "+shift+alt" },
-  "cnv_web": { key: "c", modifiers: cmd_or_ctrl + "+shift+alt" },
+  "object_web": { key: "1", modifiers: cmd_or_ctrl },
+  "msgbox_web": { key: "2", modifiers: cmd_or_ctrl },
+  "number_web": { key: "3", modifiers: cmd_or_ctrl },
+  "symbol_web": { key: "4", modifiers: cmd_or_ctrl },
+  "comment_web": { key: "5", modifiers: cmd_or_ctrl },
+  "dropdown_web": { key: "M", modifiers: cmd_or_ctrl + "+Shift" },
+  "bang_web": { key: "B", modifiers: cmd_or_ctrl + "+Shift" },
+  "toggle_web": { key: "T", modifiers: cmd_or_ctrl + "+Shift" },
+  "number2_web": { key: "N", modifiers: cmd_or_ctrl + "+Shift" },
+  "vslider_web": { key: "V", modifiers: cmd_or_ctrl + "+Shift" },
+  "hslider_web": { key: "H", modifiers: cmd_or_ctrl + "+Shift" },
+  "vradio_web": { key: "D", modifiers: cmd_or_ctrl + "+Shift" },
+  "hradio_web": { key: "I", modifiers: cmd_or_ctrl + "+Shift" },
+  "vu_web":     { key: "U", modifiers: cmd_or_ctrl + "+Shift" },
+  "cnv_web": { key: "C", modifiers: cmd_or_ctrl + "+Shift" },
 
-  "nextwin_web": { key: "PageDown", modifiers: cmd_or_ctrl + "+alt"},
-  "prevwin_web": { key: "PageUp", modifiers: cmd_or_ctrl + "+alt"},
-  "pdwin_web": { key: "r", modifiers: cmd_or_ctrl },
+  "nextwin_web": { key: "PageDown", modifiers: cmd_or_ctrl },
+  "prevwin_web": { key: "PageUp", modifiers: cmd_or_ctrl },
+  "pdwin_web": { key: "R", modifiers: cmd_or_ctrl },
 
-  "audio_on_web": { key: "/", modifiers: cmd_or_ctrl + "+alt"},
-  "audio_off_web": { key: ".", modifiers: cmd_or_ctrl + "+alt"},
+  "audio_on_web": { key: "/", modifiers: cmd_or_ctrl },
+  "audio_off_web": { key: ".", modifiers: cmd_or_ctrl },
 
-  "browser_web": { key: "b", modifiers: cmd_or_ctrl + "+alt" },
+  "browser_web": { key: "B", modifiers: cmd_or_ctrl },
 
 }
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"_process":4}],12:[function(require,module,exports){
-(function (process){
+(function (process){(function (){
 "use strict";
 
 var pwd;
@@ -6499,8 +6741,16 @@ function is_webapp(){
     }
     return true;
 }
+
 exports.is_webapp = is_webapp;
 
+if (is_webapp()) {
+    if (navigator.platform.toUpperCase().indexOf("MAC") > -1) {
+        process.platform = "darwin";
+    } else if (navigator.platform.toUpperCase().indexOf("WIN") > -1) {
+        process.platform = "win32";
+    }
+}
 
 exports.set_pwd = function(pwd_string) {
     pwd = pwd_string;
@@ -7676,14 +7926,33 @@ function gui_quit_dialog() {
 
 // send a message to Pd
 function menu_send(name) {
-    var message,
+    if (is_webapp) {
+        $(".editmode").removeClass("editmode");
+        $('[id*="editmode"]').prop('checked', false);
+        $("#message-modal").modal("show");
+        $("#message-text").val(name);
+    } else {
+        var message,
         win = name ? patchwin[name] : pd_window;
-    message = win.window.prompt("Type a message to send to Pd", name);
+        message = win.window.prompt("Type a message to send to Pd", name);
+        if (message != undefined && message.length) {
+        post("Sending message to Pd: " + message + ";");
+        pdsend(message);
+        }
+    }
+}
+
+function web_menu_send() {
+    var message = $("#message-text").val();
     if (message != undefined && message.length) {
         post("Sending message to Pd: " + message + ";");
         pdsend(message);
     }
+    $("#message-text").val("");
+    $("#message-modal").modal("hide");
 }
+
+exports.web_menu_send = web_menu_send;
 
 // requires nw.js API (Menuitem)
 function canvas_set_editmode(cid, state) {
@@ -7719,8 +7988,7 @@ function gui_canvas_set_cordinspector(cid, state) {
 }
 
 function canvas_set_scrollbars(cid, scroll) {
-    patchwin[cid].window.document.body.style.
-        overflow = scroll ? "visible" : "hidden";
+    patchwin[cid].window.document.body.style.overflow = "hidden";
 }
 
 exports.canvas_set_scrollbars = canvas_set_scrollbars;
@@ -8523,6 +8791,25 @@ function upload_patch(files) {
         return;
     }
 
+    var fileInput = document.getElementById("uploadPatch");
+    var allowedExtension = ".pd";
+
+    // Check that the file extension is supported.
+    // If not, clear the input.
+    var hasInvalidFiles = false;
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        
+        if (!file.name.endsWith(allowedExtension)) {
+        hasInvalidFiles = true;
+        }
+    }
+    
+    if(hasInvalidFiles) {
+        fileInput.value = ""; 
+        alert("Unsupported file selected.");
+    }
+
     for (const file of files){
         var reader = new FileReader();
         reader.onload = function () {
@@ -8591,6 +8878,23 @@ function download_patch(file_name) {
 
 exports.download_patch = download_patch;
 
+function delete_file(file_name) {
+    FS.unlink(workspace+file_name, function(err) {
+        console.log(err);
+    });
+    update_file_ls();
+}
+
+function edit_file_name(file_name) {
+    var new_name = prompt("Enter new file name", file_name);  
+    if (new_name != null) {
+        FS.rename(workspace+file_name, workspace+new_name, function(err) {
+            console.log(err);
+        });
+        update_file_ls();
+    }
+}
+
 function update_file_ls(){
     var file_ls = window.document.getElementById("file_ls");
     file_ls.innerHTML = "";
@@ -8599,16 +8903,33 @@ function update_file_ls(){
     for (const file of FS.readdir(workspace)){
         var mode = FS.stat(workspace+file).mode;
         if(FS.isFile(mode)){
+            var list_item = window.document.createElement("div");
+            var icons = window.document.createElement("div");
             var li = window.document.createElement("li");
             var a = window.document.createElement("a");
+            var edit_icon = window.document.createElement("i");
+            edit_icon.classList.add("fa", "fa-pencil", "text-primary", "edit");
+            var trash_icon = window.document.createElement("i");
+            trash_icon.classList.add("fa", "fa-trash", "text-primary", "delete");
+            icons.setAttribute("id", "file-icons");
+            list_item.classList.add("d-flex", "justify-content-between");
+            list_item.setAttribute("id", "list-item");
             // Add name of file
-            a.append("./"+file);
+            a.append(file);
     
             // Add open button
             a.onclick = function(){open_patch(file)};
+            trash_icon.onclick = function(){delete_file(file)};
+            edit_icon.onclick = function(){edit_file_name(file)};
             li.append(a);
-           
-            file_ls.append(li);
+            li.classList.add("d-inline-block", "text-truncate");
+
+            //append elements
+            list_item.append(li);
+            icons.append(edit_icon);
+            icons.append(trash_icon);
+            list_item.append(icons);
+            file_ls.append(list_item);
             files_added = files_added + 1;
         }
     }
@@ -12214,6 +12535,9 @@ function open_prefs() {
     } else {
         dialog_raise("prefs");
     }
+    // show sidebar
+    $("#sidebar").collapse("show");
+    $("#sidebar-col-icon").removeClass("rotate");
 }
 
 exports.open_prefs = open_prefs;
@@ -12224,6 +12548,9 @@ function open_search() {
     } else {
         dialog_raise("search");
     }
+    // show sidebar
+    $("#sidebar").collapse("show");
+    $("#sidebar-col-icon").removeClass("rotate");
 }
 
 exports.open_search= open_search;
@@ -12879,7 +13206,7 @@ function gui_pddplink_open(filename, dir) {
     }
 }
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"./dive.js":5,"./elasticlunr.js":6,"./parse-svg-path.js":8,"./pdlang.js":13,"_process":4,"child_process":2,"fs":2,"net":2,"path":3}],13:[function(require,module,exports){
 "use strict";
 

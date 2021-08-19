@@ -13,6 +13,12 @@ function load_menu_actions(){
     // File sub-entries
     minit("file-message",{onclick: function(){pdbundle.pdgui.menu_send()}});
 
+    minit("file-open",{onclick: function(){
+        // show sidebar
+        $("#sidebar").collapse("show");
+        $("#sidebar-col-icon").removeClass("rotate");
+    }});
+
     // Edit entries
     minit("edit-copy", {
         onclick: function() {
@@ -40,6 +46,41 @@ function load_menu_actions(){
                 window.getSelection().empty();
                 window.getSelection().addRange(range);
             }
+            // show sidebar
+            $("#console_bottom").collapse("show");
+            $("#open-icon").removeClass("rotate");
+        }
+    });
+
+    minit("cons_copy", {
+        onclick: function() {
+            var text = "";
+            if (window.getSelection) {
+                text = window.getSelection().toString();
+            } else if (document.selection && document.selection.type != "Control") {
+                text = document.selection.createRange().text;
+            }
+            if (text.length === 0) {
+                var container_id = "p1", range;
+                // This should work across browsers
+                if (window.document.selection) {
+                    range = window.document.body.createTextRange();
+                    range.moveToElementText(window.document.getElementById(container_id));
+                    range.select();
+                } else if (window.getSelection) {
+                    range = window.document.createRange();
+                    range.selectNode(window.document.getElementById(container_id));
+                    // we need to empty the current selection to avoid a strange
+                    // error when trying to select all right after Pd starts:
+                    // "The given range and the current selection belong to two
+                    //  different document fragments."
+                    // (I guess nw.js somehow starts up with the selection being
+                    // somewhere outside the window...)
+                    window.getSelection().empty();
+                    window.getSelection().addRange(range);
+                }
+            }
+            window.document.execCommand("copy");
         }
     });
 
@@ -66,6 +107,9 @@ function load_menu_actions(){
                 text_container.style.setProperty("bottom", "0px");
                 find_bar.style.setProperty("display", "none");
             }
+             // show sidebar
+            $("#console_bottom").collapse("show");
+            $("#open-icon").removeClass("rotate");
         }
     });
 
@@ -79,7 +123,18 @@ function load_menu_actions(){
         }
     });
 
+    minit("find_below", {
+        onclick: function() {
+            console_find_below()
+        }
+    });
 
+    minit("find_above", {
+        onclick: function() {
+            console_find_above()
+        }
+    });
+    
     // Media entries
     minit("media-test",{onclick: function(){pdbundle.pdgui.web_pd_doc_open("doc/7.stuff/tools", "testtone.pd")}});
     minit("media-loadmeter",{onclick: function(){pdbundle.pdgui.web_pd_doc_open("doc/7.stuff/tools", "load-meter.pd")}});
@@ -87,19 +142,19 @@ function load_menu_actions(){
     // Help entries
     minit("help-about", {onclick:
         function(){
-            pdbundle.pdgui.web_pd_doc_open("doc/about", "about.pd")
+            pdbundle.pdgui.web_external_doc_open("https://agraef.github.io/purr-data-intro/Purr-Data-Intro.html")
         }
     });
 
     minit("help-manual", {onclick:
         function(){
-            pdbundle.pdgui.web_pd_doc_open("doc/1.manual", "index.htm")
+            pdbundle.pdgui.web_external_doc_open("https://puredata.info/docs/manuals/")
         }
     });
 
     minit("help-intro", {onclick:
         function(){
-            pdbundle.pdgui.web_pd_doc_open("doc/5.reference", "help-intro.pd")
+            pdbundle.pdgui.web_external_doc_open("http://puredata.info/docs/manuals/pdrefcards/pd-refcard-en.pdf/view")
         }
     });
 
@@ -134,13 +189,23 @@ function add_shortcuts(cid){
 
     document.onkeydown = function (e){
         // Check modifiers
-        var shortcut = e.ctrlKey ? "ctrl+": "";
-        shortcut += e.shiftKey ? "shift+": "";
-        shortcut += e.altKey ? "alt+": "";
+        var shortcut = e.ctrlKey ? "Ctrl+": "";
+        shortcut += e.metaKey ? "Cmd+": "";
+        shortcut += e.shiftKey ? "Shift+": "";
+        shortcut += e.altKey ? "Alt+": "";
         // Add key
-        shortcut += e.key.toLowerCase();
-        if(window.shortkeys[cid].hasOwnProperty(shortcut)){            
-            window.shortkeys[cid][shortcut].click();
+        shortcut += e.key.toUpperCase();
+        if(window.shortkeys[cid].hasOwnProperty(shortcut)){
+            switch(shortcut) {
+                case "Ctrl+0":
+                case "Ctrl+=":
+                case "Ctrl+-":
+                case "F11":
+                    break;
+                default:
+                    e.preventDefault()         
+                    window.shortkeys[cid][shortcut].click();
+            }
         }
     }
 }
