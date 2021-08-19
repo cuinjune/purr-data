@@ -8,5 +8,8 @@
     "devDependencies": {
         "browserify": "^17.0.0",
         "serve": "^11.3.2"
+    },
+    "dependencies": {
+        "dependencies": "0.0.1"
     }
 }
