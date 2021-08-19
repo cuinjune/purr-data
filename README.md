@@ -21,7 +21,7 @@ This document describes the work that was done under [Google Summer of Code 2020
 
 The goal of this project is to make the graphical programming environment Purr Data run in a web browser so it can be more accessible to users.
 
-You can try the current version from https://cuinjune-purr-data.glitch.me/
+You can try the latest version from https://purrdata.glitch.me/
 
 ## Developers
 - The backend part of the software has been mainly done by Zack Lee (cuinjune@gmail.com)
